@@ -17,22 +17,6 @@
         </resources>
         <plugins>
             <plugin>
-                <groupId>ru.sdp</groupId>
-                <artifactId>sdp-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>build-info</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>build-info</goal>
-                        </goals>
-                        <configuration>
-                            <targetDir>${project.build.directory}/generated-resources</targetDir>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>1.8</source>
