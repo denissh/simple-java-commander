@@ -188,7 +188,16 @@ public class Commander {
         for (Map.Entry<String, Class<? extends Runnable>> entry : mapp.entrySet()) {
             Class<? extends Runnable> clazz = entry.getValue();
             if (clazz.isAnnotationPresent(Cmd.class)) {
-                list.add("    " + entry.getKey() + " " + clazz.getAnnotation(Cmd.class).description());
+                String description = clazz.getAnnotation(Cmd.class).description();
+                list.add("    " + entry.getKey() + (description.isEmpty() ? "" : (" - " + description)));
+                for (Field field : clazz.getDeclaredFields()) {
+                    if (field.isAnnotationPresent(Param.class)) {
+                        Param param = field.getAnnotation(Param.class);
+                        String names = Arrays.stream(param.names()).collect(Collectors.joining(", "));
+                        list.add("        " + names + (param.description().isEmpty() ? "" : " - " + param.description()));
+                    }
+                }
+
             }
         }
         return list;
