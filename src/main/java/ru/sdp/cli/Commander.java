@@ -190,16 +190,30 @@ public class Commander {
             if (clazz.isAnnotationPresent(Cmd.class)) {
                 String description = clazz.getAnnotation(Cmd.class).description();
                 list.add("    " + entry.getKey() + (description.isEmpty() ? "" : (" - " + description)));
-                for (Field field : clazz.getDeclaredFields()) {
-                    if (field.isAnnotationPresent(Param.class)) {
-                        Param param = field.getAnnotation(Param.class);
-                        String names = Arrays.stream(param.names()).collect(Collectors.joining(", "));
-                        list.add("        " + names + (param.description().isEmpty() ? "" : " - " + param.description()));
-                    }
-                }
-
+				list.addAll(getParamUsage(clazz));
             }
         }
-        return list;
+		return list;
     }
+
+	private List<String> getParamUsage(Class<? extends Runnable> clazz) {
+		Map<String, String> map = new LinkedHashMap<>();
+		for (Field field : clazz.getDeclaredFields()) {
+			if (field.isAnnotationPresent(Param.class)) {
+				Param param = field.getAnnotation(Param.class);
+				String names = Arrays.stream(param.names()).collect(Collectors.joining(", "));
+				map.put(names, param.description());
+			}
+		}
+		int maxLength = map.keySet().stream().mapToInt(String::length).max().orElse(0);
+		ArrayList<String> params = new ArrayList<>();
+		for (Map.Entry<String, String> item : map.entrySet()) {
+			if (item.getValue().isEmpty()){
+				params.add("        " + item.getKey());
+			} else {
+				params.add("        " + String.format("%1$-" + maxLength + "s", item.getKey()) + (item.getValue().isEmpty() ? "" : " - " + item.getValue()));
+			}
+		}
+		return params;
+	}
 }
