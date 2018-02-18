@@ -31,11 +31,23 @@ public class Commander {
         if (args.length == 0) {
             throw new Exception("No arguments");
         }
-        Class<? extends Runnable> clazz = mapp.get(args[0]);
+
+        String mask = args[0];
+        currCmd = mask;
+        Class<? extends Runnable> clazz = mapp.get(mask);
         if (clazz == null) {
-            throw new Exception("Command " + args[0] + " not found");
+            List<String> keys = mapp.keySet().stream().filter(key -> key.startsWith(mask)).collect(Collectors.toList());
+            if (keys.isEmpty()) {
+                throw new UnknownCommandException("Unknown command '" + mask + "'");
+            }
+
+            if (keys.size() > 1) {
+                throw new UnknownCommandException("Command '" + mask + "' is ambiguous: " + keys.stream().collect(Collectors.joining(", ")));
+            }
+            clazz = mapp.get(keys.get(0));
+            currCmd = keys.get(0);
         }
-        currCmd = args[0];
+
         List<String> list = Arrays.stream(args).skip(1).collect(Collectors.toList());
         Runnable command = parse(list.toArray(new String[list.size()]), clazz);
         command.run();
@@ -190,30 +202,30 @@ public class Commander {
             if (clazz.isAnnotationPresent(Cmd.class)) {
                 String description = clazz.getAnnotation(Cmd.class).description();
                 list.add("    " + entry.getKey() + (description.isEmpty() ? "" : (" - " + description)));
-				list.addAll(getParamUsage(clazz));
+                list.addAll(getParamUsage(clazz));
             }
         }
-		return list;
+        return list;
     }
 
-	private List<String> getParamUsage(Class<? extends Runnable> clazz) {
-		Map<String, String> map = new LinkedHashMap<>();
-		for (Field field : clazz.getDeclaredFields()) {
-			if (field.isAnnotationPresent(Param.class)) {
-				Param param = field.getAnnotation(Param.class);
-				String names = Arrays.stream(param.names()).collect(Collectors.joining(", "));
-				map.put(names, param.description());
-			}
-		}
-		int maxLength = map.keySet().stream().mapToInt(String::length).max().orElse(0);
-		ArrayList<String> params = new ArrayList<>();
-		for (Map.Entry<String, String> item : map.entrySet()) {
-			if (item.getValue().isEmpty()){
-				params.add("        " + item.getKey());
-			} else {
-				params.add("        " + String.format("%1$-" + maxLength + "s", item.getKey()) + (item.getValue().isEmpty() ? "" : " - " + item.getValue()));
-			}
-		}
-		return params;
-	}
+    private List<String> getParamUsage(Class<? extends Runnable> clazz) {
+        Map<String, String> map = new LinkedHashMap<>();
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.isAnnotationPresent(Param.class)) {
+                Param param = field.getAnnotation(Param.class);
+                String names = Arrays.stream(param.names()).collect(Collectors.joining(", "));
+                map.put(names, param.description());
+            }
+        }
+        int maxLength = map.keySet().stream().mapToInt(String::length).max().orElse(0);
+        ArrayList<String> params = new ArrayList<>();
+        for (Map.Entry<String, String> item : map.entrySet()) {
+            if (item.getValue().isEmpty()) {
+                params.add("        " + item.getKey());
+            } else {
+                params.add("        " + String.format("%1$-" + maxLength + "s", item.getKey()) + (item.getValue().isEmpty() ? "" : " - " + item.getValue()));
+            }
+        }
+        return params;
+    }
 }

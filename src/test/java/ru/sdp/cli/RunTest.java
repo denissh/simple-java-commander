@@ -16,7 +16,7 @@ public class RunTest {
             new Commander().run(new String[]{"cmd1"});
             Assert.fail();
         } catch (Exception e) {
-            assertEquals("Command cmd1 not found", e.getMessage());
+            assertEquals("Unknown command 'cmd1'", e.getMessage());
         }
     }
 
