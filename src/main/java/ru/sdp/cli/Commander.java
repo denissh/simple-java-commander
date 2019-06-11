@@ -146,11 +146,16 @@ public class Commander {
 
     private <T extends Runnable> Map<Field, List<String>> collect(T command) {
         Map<Field, List<String>> fields = new HashMap<>();
-        for (Field field : command.getClass().getDeclaredFields()) {
-            if (field.isAnnotationPresent(Param.class)) {
-                Param param = field.getAnnotation(Param.class);
-                fields.put(field, Arrays.asList(param.names()));
+
+        Class clazz = command.getClass();
+        while (!"java.lang.Object".equals(clazz.getName())) {
+            for (Field field : clazz.getDeclaredFields()) {
+                if (field.isAnnotationPresent(Param.class)) {
+                    Param param = field.getAnnotation(Param.class);
+                    fields.put(field, Arrays.asList(param.names()));
+                }
             }
+            clazz = clazz.getSuperclass();
         }
         return fields;
     }
